@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chatbot AprendeAi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ── Container principal ── */
+    .chat-wrapper {
+      width: 420px;
+      height: 680px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Cabeçalho ── */
+    .chat-header {
+      background: #ff6a00;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header .avatar {
+      width: 42px;
+      height: 42px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .chat-header .info h3 {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .chat-header .info p {
+      color: rgba(255,255,255,0.85);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    /* ── Área de mensagens ── */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #f8f9fa;
+    }
+
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    /* ── Balões de mensagem ── */
+    .msg {
+      max-width: 78%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.bot {
+      background: #fff;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      white-space: pre-line;
+    }
+
+    .msg.usuario {
+      background: #ff6a00;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+    }
+
+    /* ── Botões de escolha ── */
+    .opcoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      align-self: flex-start;
+      max-width: 90%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .opcao-btn {
+      background: #fff;
+      border: 2px solid #ff6a00;
+      color: #ff6a00;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .opcao-btn:hover {
+      background: #ff6a00;
+      color: #fff;
+    }
+
+    .opcao-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ── Typing indicator ── */
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .typing span {
+      width: 7px;
+      height: 7px;
+      background: #aaa;
+      border-radius: 50%;
+      animation: bounce 1s infinite;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30%            { transform: translateY(-6px); }
+    }
+
+    /* ── Input de texto ── */
+    .chat-input {
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      border: 1px solid #e5e7eb;
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .chat-input input:focus { border-color: #ff6a00; }
+
+    .chat-input button {
+      background: #ff6a00;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .chat-input button:hover { background: #e55d00; }
+
+    .chat-input button svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+
+  <!-- Cabeçalho -->
+  <div class="chat-header">
+    <div class="avatar">🎓</div>
+    <div class="info">
+      <h3>Assistente AprendeAi</h3>
+      <p><span class="status-dot"></span>Online agora</p>
+    </div>
+  </div>
+
+  <!-- Mensagens -->
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <!-- Input -->
+  <div class="chat-input">
+    <input
+      type="text"
+      id="input-msg"
+      placeholder="Digite sua mensagem..."
+      autocomplete="off"
+    />
+    <button onclick="enviarMensagem()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let sessao = {};
+
+  // Inicia conversa automaticamente ao carregar
+  window.onload = () => enviar("", true);
+
+  function enviarMensagem() {
+    const input = document.getElementById("input-msg");
+    const texto = input.value.trim();
+    if (!texto) return;
+    input.value = "";
+    adicionarMensagem(texto, "usuario");
+    enviar(texto, false);
+  }
+
+  // Permite enviar com Enter
+  document.getElementById("input-msg").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") enviarMensagem();
+  });
+
+  async function enviar(mensagem, inicio) {
+    // Desabilita botões enquanto aguarda resposta
+    desabilitarBotoes(true);
+
+    // Mostra typing indicator
+    const typing = mostrarTyping();
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem, sessao })
+      });
+      const data = await res.json();
+      sessao = data.sessao;
+
+      // Remove typing indicator
+      typing.remove();
+
+      // Exibe as respostas com pequeno delay entre elas
+      for (let i = 0; i < data.resposta.length; i++) {
+        await delay(i === 0 ? 0 : 400);
+        renderizarBloco(data.resposta[i]);
+      }
+
+    } catch (err) {
+      typing.remove();
+      adicionarMensagem("Erro de conexao. Verifique se o servidor esta rodando.", "bot");
+    }
+
+    desabilitarBotoes(false);
+    rolarParaBaixo();
+  }
+
+  function renderizarBloco(bloco) {
+    const container = document.getElementById("chat-messages");
+
+    if (bloco.tipo === "texto") {
+      adicionarMensagem(bloco.conteudo, "bot");
+
+    } else if (bloco.tipo === "botoes") {
+      const div = document.createElement("div");
+      div.className = "opcoes";
+      bloco.opcoes.forEach(opcao => {
+        const btn = document.createElement("button");
+        btn.className = "opcao-btn";
+        btn.textContent = opcao;
+        btn.onclick = () => {
+          // Mostra como mensagem do usuário
+          adicionarMensagem(opcao, "usuario");
+          // Desabilita todos os botões deste grupo
+          div.querySelectorAll("button").forEach(b => b.disabled = true);
+          enviar(opcao, false);
+        };
+        div.appendChild(btn);
+      });
+      container.appendChild(div);
+    }
+
+    rolarParaBaixo();
+  }
+
+  function adicionarMensagem(texto, tipo) {
+    const container = document.getElementById("chat-messages");
+    const msg = document.createElement("div");
+    msg.className = `msg ${tipo}`;
+    msg.textContent = texto;
+    container.appendChild(msg);
+    rolarParaBaixo();
+  }
+
+  function mostrarTyping() {
+    const container = document.getElementById("chat-messages");
+    const typing = document.createElement("div");
+    typing.className = "typing";
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    container.appendChild(typing);
+    rolarParaBaixo();
+    return typing;
+  }
+
+  function desabilitarBotoes(estado) {
+    document.querySelectorAll(".opcao-btn").forEach(btn => {
+      if (!btn.disabled) btn.disabled = estado;
+    });
+  }
+
+  function rolarParaBaixo() {
+    const container = document.getElementById("chat-messages");
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+</script>
+
+</body>
+</html>
