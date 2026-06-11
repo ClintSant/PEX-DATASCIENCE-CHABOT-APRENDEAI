@@ -22,6 +22,19 @@ st.markdown("""
         width: 8px; height: 8px; background: #4ade80;
         border-radius: 50%; display: inline-block; margin-right: 4px;
     }
+    div[data-testid="stChatMessage"] {
+        background-color: #ffffff !important;
+        color: #1f2937 !important;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        padding: 8px;
+    }
+    div[data-testid="stChatMessage"] p {
+        color: #1f2937 !important;
+    }
+    div[data-testid="stChatMessage"] * {
+        color: #1f2937 !important;
+    }
     .stButton button {
         background-color: white !important;
         border: 2px solid #ff6a00 !important;
@@ -41,7 +54,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Inicializar estado
 if "sessao" not in st.session_state:
     st.session_state.sessao = {}
 
@@ -52,7 +64,6 @@ if "opcoes_ativas" not in st.session_state:
     st.session_state.opcoes_ativas = []
 
 if "iniciou" not in st.session_state:
-    # Primeira mensagem do bot
     respostas, sessao_nova = processar_mensagem("", {})
     st.session_state.sessao = sessao_nova
     for bloco in respostas:
@@ -65,12 +76,10 @@ if "iniciou" not in st.session_state:
             st.session_state.opcoes_ativas = bloco["opcoes"]
     st.session_state.iniciou = True
 
-# Exibir histórico
 for msg in st.session_state.historico:
     with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+        st.markdown(f"<p style='color:#1f2937;margin:0;'>{msg['content']}</p>", unsafe_allow_html=True)
 
-# Exibir botões
 if st.session_state.opcoes_ativas:
     opcoes = st.session_state.opcoes_ativas
     cols = st.columns(len(opcoes))
@@ -94,7 +103,6 @@ if st.session_state.opcoes_ativas:
                         st.session_state.opcoes_ativas = bloco["opcoes"]
                 st.rerun()
 
-# Input de texto
 if prompt := st.chat_input("Digite sua mensagem..."):
     st.session_state.historico.append({
         "role": "user",
